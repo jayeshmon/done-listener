@@ -119,7 +119,7 @@ app.post('/drone-data', async (req, res) => {
 
   try {
     await DroneData.insertMany(data);
-    res.status(201).send('Data saved successfully');
+    res.status(201).send({'response':'Data saved successfully'});
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
     res.status(500).send('Error saving data');
