@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true ,authSource: 'admin'})
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
 
@@ -49,7 +49,7 @@ const droneDataSchema = new mongoose.Schema({
   SS: String,
   p: Number,
   FN: String
-});
+}, { collection: 'drone_data' });
 
 const DroneData = mongoose.model('DroneData', droneDataSchema);
 
@@ -99,18 +99,29 @@ const validate = ajv.compile({
 // Listener endpoint
 app.post('/drone-data', async (req, res) => {
   const data = req.body;
-  const valid = validate(data);
-
-  if (!valid) {
-    return res.status(400).send(validate.errors);
+  
+  if (!Array.isArray(data)) {
+    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "must be array" }]);
+  }
+  
+  const errors = [];
+  
+  for (const item of data) {
+    const valid = validate(item);
+    if (!valid) {
+      errors.push({ item, errors: validate.errors });
+    }
   }
 
-  const droneData = new DroneData(data);
+  if (errors.length) {
+    return res.status(400).send(errors);
+  }
 
   try {
-    await droneData.save();
+    await DroneData.insertMany(data);
     res.status(201).send('Data saved successfully');
   } catch (err) {
+    console.error('Error saving data:', err); // Log the error
     res.status(500).send('Error saving data');
   }
 });
