@@ -2,15 +2,17 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const Ajv = require('ajv');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
+app.use(cors()); // Enable CORS for all origins
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true ,authSource: 'admin'})
+mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
 
@@ -99,13 +101,13 @@ const validate = ajv.compile({
 // Listener endpoint
 app.post('/drone-data', async (req, res) => {
   const data = req.body;
-  
+
   if (!Array.isArray(data)) {
     return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "must be array" }]);
   }
-  
+
   const errors = [];
-  
+
   for (const item of data) {
     const valid = validate(item);
     if (!valid) {
@@ -119,7 +121,7 @@ app.post('/drone-data', async (req, res) => {
 
   try {
     await DroneData.insertMany(data);
-    res.status(201).send({'response':'Data saved successfully'});
+    res.status(201).send({ 'response': 'Data saved successfully' });
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
     res.status(500).send('Error saving data');
