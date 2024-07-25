@@ -10,8 +10,18 @@
   "license": "ISC",
   "dependencies": {
     "ajv": "^8.17.1",
+    "bcryptjs": "^2.4.3",
+    "chai": "^5.1.1",
+    "chai-http": "^5.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "mongoose": "^8.5.1"
+    "jsonwebtoken": "^9.0.2",
+    "mocha": "^10.7.0",
+    "mongoose": "^8.5.1",
+    "supertest": "^7.0.0"
+  },
+  "devDependencies": {
+    "esm": "^3.2.25"
   }
 }
