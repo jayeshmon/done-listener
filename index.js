@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Ajv = require('ajv');
 const cors = require('cors');
+const { createClient } = require('redis');
 
 const app = express();
 app.use(express.json());
@@ -10,11 +11,25 @@ app.use(cors()); // Enable CORS for all origins
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
+const REDIS_PORT = process.env.REDIS_PORT || 6379;
+const REDIS_DB = process.env.REDIS_DB || 1;
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Could not connect to MongoDB', err));
+
+// Connect to Redis
+const redisClient = createClient({ url: `redis://localhost:${REDIS_PORT}` });
+
+redisClient.on('error', (err) => {
+  console.error('Could not connect to Redis', err);
+});
+
+redisClient.connect().then(() => {
+  console.log('Connected to Redis');
+  redisClient.select(REDIS_DB);
+});
 
 // Define the drone data schema
 const droneDataSchema = new mongoose.Schema({
@@ -121,6 +136,11 @@ app.post('/drone-data', async (req, res) => {
 
   try {
     await DroneData.insertMany(data);
+    
+    // Store the last packet in Redis
+    const lastData = data[data.length - 1];
+    await redisClient.set(lastData.t, JSON.stringify(lastData));
+
     res.status(201).send({ 'response': 'Data saved successfully' });
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
