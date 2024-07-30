@@ -5,9 +5,18 @@ import { Drone } from './models/Drone.mjs';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-
+import { createClient } from 'redis';
 dotenv.config();
-
+console.log();
+const redisClient = createClient({
+    socket: {
+      host: 'localhost',
+      port: 6379 // For example, 6379
+    }
+  });
+  redisClient.connect().catch(console.error);
+  await redisClient.select(1);
+  
 const app = express();
 app.use(express.json());
 
@@ -32,7 +41,7 @@ app.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = new User({ username, password: hashedPassword, role,mobile,companyName });
         await user.save();
-        res.status(201).send('User registered');
+        res.status(201).send({'message':'User registered'});
     } catch (err) {
         console.error('Error registering user', err.message);
         if (err.code === 11000) {
@@ -87,7 +96,7 @@ app.put('/users/:username', async (req, res) => {
         res.status(400).send({'message':'Error updating user: ' + err.message});
     }
 });
-app.delete('/users/:username', async (req, res) => {
+app.post('/users/delete/:username', async (req, res) => {
     const { username } = req.params;
 
     try {
@@ -250,26 +259,117 @@ app.post('/assign-drones/:username', async (req, res) => {
     }
 });
 
-app.get('/users/:username/drones', async (req, res) => {
-    const { username } = req.params;
 
+  app.get('/lastdata/:imei', async (req, res) => {
     try {
-        // Find the user by username
-        const user = await User.findOne({ username }).populate('drones'); // Populate the drones field
-
-        if (!user) {
-            return res.status(404).send({'message':'User not found'});
-        }
-
-        // Send the list of drones assigned to the user
-        res.status(200).json(user.drones);
-    } catch (err) {
-        res.status(500).send({'message':'Server error ' + err.message});
+      const { imei } = req.params;
+  
+      // Fetch the latest data from Redis using the IMEI as the key
+      const redisData = await redisClient.get(imei);
+  
+      if (!redisData) {
+        return res.status(404).json({ message: 'Data not found for the given IMEI' });
+      }
+  
+      // Parse the Redis data (assuming it's stored as a JSON string)
+      const latestData = JSON.parse(redisData);
+  
+      // Return the latest data
+      res.json(latestData);
+    } catch (error) {
+      console.error('Error fetching data from Redis:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
-});
+  });
+  app.get('/alldronesdata', async (req, res) => {
+    if (!redisClient.isOpen) {
+        console.log("redis disconnected");
+        await redisClient.connect();
+        await redisClient.select(1);
+      }
+    console.log("alldronedata");
+    try {
+      // Fetch all drones from MongoDB
+      const drones = await Drone.find();
+  
+      // Create an array to hold the combined data
+      const combinedData = [];
+  
+      // Iterate over the drones to fetch additional data from Redis
+      for (const drone of drones) {
+        // Fetch the latest data from Redis using the drone's IMEI as the key
+        console.log(drone.imei);
+        let redisData="";
+        try{
+         redisData = await redisClient.get(drone.imei);
+        console.log(redisData);
+        }catch(err){
+console.log(err.message);
+        }
+        
+        // Parse the Redis data (assuming it's stored as a JSON string)
+        const latestData = redisData ? JSON.parse(redisData) : {};
+  
+        // Merge MongoDB data with Redis data
+        const combinedDroneData = {
+          ...drone.toObject(), // Convert Mongoose document to plain JavaScript object
+          latestData,         // Add latest data from Redis
+        };
+  
+        // Add the combined data to the array
+        combinedData.push(combinedDroneData);
+      }
+  
+      // Return the combined data
+      res.json(combinedData);
+    } catch (error) {
+      console.error('Error fetching drones:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  app.get('/dronesdata/:username', async (req, res) => {
+    try {
+      const { username } = req.params;
+  
+      // Find the user by username
+      const user = await User.findOne({ username });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      // Find drones assigned to the user
+      const drones = await Drone.find({ assignedUser: user._id });
+  
+      // Create an array to hold the combined data
+      const combinedData = [];
+  
+      // Iterate over the drones to fetch additional data from Redis
+      for (const drone of drones) {
+        // Fetch the latest data from Redis using the drone's IMEI as the key
+        const redisData = await redisClient.get(drone.imei);
 
+        // Parse the Redis data (assuming it's stored as a JSON string)
+        const latestData = redisData ? JSON.parse(redisData) : {};
+  
+        // Merge MongoDB data with Redis data
+        const combinedDroneData = {
+          ...drone.toObject(), // Convert Mongoose document to plain JavaScript object
+          latestData,         // Add latest data from Redis
+        };
+  
+        // Add the combined data to the array
+        combinedData.push(combinedDroneData);
+      }
+  
+      // Return the combined data
+      res.json(combinedData);
+    } catch (error) {
+      console.error('Error fetching drones:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
 // Define routes...
-const PORT = process.env.API_PORT || 5000;
+const PORT = process.env.API_PORT || 5000 ;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
 export { app };

@@ -19,7 +19,7 @@
     "jsonwebtoken": "^9.0.2",
     "mocha": "^10.7.0",
     "mongoose": "^8.5.1",
-    "redis": "^4.6.15",
+    "redis": "^4.7.0",
     "supertest": "^7.0.0"
   },
   "devDependencies": {
