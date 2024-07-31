@@ -368,6 +368,36 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+app.get('/dronedata/:imei', async (req, res) => {
+  try {
+    const { imei } = req.params;
+console.log(imei);
+    // Find the drone by imei
+    const drone = await Drone.findOne({ imei });
+    if (!drone) {
+      return res.status(404).json({ message: 'Drone not found' });
+    }
+
+    // Fetch the latest data from Redis using the drone's IMEI as the key
+    const redisData = await redisClient.get(drone.imei);
+
+    // Parse the Redis data if it exists, otherwise use an empty object
+    const latestData = redisData ? JSON.parse(redisData) : {};
+
+    // Combine the drone data with the latest data
+    const combinedData = {
+      ...drone.toObject(), // Convert the Mongoose document to a plain JavaScript object
+      latestData,
+    };
+
+    // Return the combined data in the response
+    res.json(combinedData);
+  } catch (error) {
+    console.error('Error fetching drones:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Define routes...
 const PORT = process.env.API_PORT || 5000 ;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
