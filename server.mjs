@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { User } from './models/User.mjs';
 import { Drone } from './models/Drone.mjs';
+import { DroneData } from './models/DroneData.mjs';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -397,6 +398,38 @@ console.log(imei);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
+app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
+  try {
+    const { t, startTime, endTime } = req.params;
+
+    console.log(t);
+  
+
+  
+
+    // Query the database for drone data with the specified identifier and within the time range
+    const droneData = await DroneData.find({
+      't': t, 
+     'T': {
+        '$gte': startTime, 
+        '$lte': endTime
+    }
+  }
+    );
+
+    if (!droneData || droneData.length === 0) {
+      //return res.status(404).json({ message: 'No drone data found for the given identifier and time range' });
+    }
+
+    // Return the drone data in the response
+    res.json(droneData);
+  } catch (error) {
+    console.error('Error fetching drone data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 // Define routes...
 const PORT = process.env.API_PORT || 5000 ;
