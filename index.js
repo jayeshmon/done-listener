@@ -7,18 +7,13 @@ const { createClient } = require('redis');
 
 const app = express();
 app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE'); // Allow specific methods
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow specific headers
+const corsOptions = {
+  origin: 'http://localhost:8000', // Replace with your specific client origin
+  credentials: true, // Allow cookies and other credentials to be sent
+};
 
-  // If the request method is OPTIONS, return a 200 status code
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+// Apply CORS middleware with options
+app.use(cors(corsOptions));
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -142,7 +137,7 @@ app.post('/drone-data', async (req, res) => {
   }
 
   if (errors.length) {
-    //return res.status(400).send(errors);
+    return res.status(400).send(errors);
   }
 
   try {
@@ -158,44 +153,6 @@ app.post('/drone-data', async (req, res) => {
     res.status(500).send('Error saving data');
   }
 });
-
-app.post('/drone-data', async (req, res) => {
-  const data = req.body;
-
-  if (!Array.isArray(data)) {
-    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "must be array" }]);
-  }
-
-  const errors = [];
-
-  for (const item of data) {
-    const valid = validate(item);
-    if (!valid) {
-      errors.push({ item, errors: validate.errors });
-    }
-  }
-
-  if (errors.length) {
-    //return res.status(400).send(errors);
-  }
-
-  try {
-    await DroneData.insertMany(data);
-    
-    // Store the last packet in Redis
-    const lastData = data[data.length - 1];
-    await redisClient.set(lastData.t, JSON.stringify(lastData));
-
-    res.status(201).send({ 'response': 'Data saved successfully' });
-  } catch (err) {
-    console.error('Error saving data:', err); // Log the error
-    res.status(500).send('Error saving data');
-  }
-});
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
