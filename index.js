@@ -142,7 +142,7 @@ app.post('/drone-data', async (req, res) => {
   }
 
   if (errors.length) {
-    return res.status(400).send(errors);
+    //return res.status(400).send(errors);
   }
 
   try {
@@ -158,6 +158,44 @@ app.post('/drone-data', async (req, res) => {
     res.status(500).send('Error saving data');
   }
 });
+
+app.post('/drone-data', async (req, res) => {
+  const data = req.body;
+
+  if (!Array.isArray(data)) {
+    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "must be array" }]);
+  }
+
+  const errors = [];
+
+  for (const item of data) {
+    const valid = validate(item);
+    if (!valid) {
+      errors.push({ item, errors: validate.errors });
+    }
+  }
+
+  if (errors.length) {
+    //return res.status(400).send(errors);
+  }
+
+  try {
+    await DroneData.insertMany(data);
+    
+    // Store the last packet in Redis
+    const lastData = data[data.length - 1];
+    await redisClient.set(lastData.t, JSON.stringify(lastData));
+
+    res.status(201).send({ 'response': 'Data saved successfully' });
+  } catch (err) {
+    console.error('Error saving data:', err); // Log the error
+    res.status(500).send('Error saving data');
+  }
+});
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
