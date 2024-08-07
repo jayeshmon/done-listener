@@ -4,16 +4,13 @@ const mongoose = require('mongoose');
 const Ajv = require('ajv');
 const cors = require('cors');
 const { createClient } = require('redis');
-const fs = require('fs');
-const https = require('https');
 
 const app = express();
 app.use(express.json());
 
 
-
 // Apply CORS middleware with options
-app.use(cors);
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -154,13 +151,6 @@ app.post('/drone-data', async (req, res) => {
   }
 });
 
-// Load the self-signed certificate and key
-const options = {
-  key: fs.readFileSync('/home/ubuntu/done-listener/cert/key.pem'),
-  cert: fs.readFileSync('/home/ubuntu/done-listener/cert/cert.pem'),
-};
-
-// Create the HTTPS server
-https.createServer(options, app).listen(PORT, () => {
-  console.log(`HTTPS Server is running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
