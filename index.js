@@ -156,8 +156,8 @@ app.post('/drone-data', async (req, res) => {
 
 // Load the self-signed certificate and key
 const options = {
-  key: fs.readFileSync('./cert/key.pem'),
-  cert: fs.readFileSync('path/to/csr.pem'),
+  key: fs.readFileSync('/home/ubuntu/done-listener/cert/key.pem'),
+  cert: fs.readFileSync('/home/ubuntu/done-listener/cert/cert.pem'),
 };
 
 // Create the HTTPS server
