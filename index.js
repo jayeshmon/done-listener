@@ -7,13 +7,10 @@ const { createClient } = require('redis');
 
 const app = express();
 app.use(express.json());
-const corsOptions = {
-  origin: 'http://localhost:8000', // Replace with your specific client origin
-  credentials: true, // Allow cookies and other credentials to be sent
-};
+
 
 // Apply CORS middleware with options
-app.use(cors(corsOptions));
+app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
