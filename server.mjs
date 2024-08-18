@@ -46,7 +46,7 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, a
 const secret = 'Astrazeneca9763'; // Use a strong secret in production
 
 
-app.post('/register', async (req, res) => {
+https.post('/register', async (req, res) => {
     const { username, password, role,mobile,companyName } = req.body;
     console.log(username);
     if (!username || !password || !role) {
@@ -66,7 +66,7 @@ app.post('/register', async (req, res) => {
         res.status(400).send({'message':'Error registering user: ' + err.message});
     }
 });
-app.get('/users', async (req, res) => {
+https.get('/users', async (req, res) => {
     try {
       const users = await User.find({});
       res.json(users);
@@ -74,7 +74,7 @@ app.get('/users', async (req, res) => {
       res.status(500).json({ message: 'Failed to fetch users', error: err.message });
     }
   });
-  app.get('/users/user', async (req, res) => {
+  https.get('/users/user', async (req, res) => {
     try {
       const users = await User.find({ role: 'user' });
       res.json(users);
@@ -83,7 +83,7 @@ app.get('/users', async (req, res) => {
     }
   });
 // Edit user route
-app.put('/users/:username', async (req, res) => {
+https.put('/users/:username', async (req, res) => {
     const { username } = req.params;
     const { password, role, mobile, companyName } = req.body;
 
@@ -112,7 +112,7 @@ app.put('/users/:username', async (req, res) => {
         res.status(400).send({'message':'Error updating user: ' + err.message});
     }
 });
-app.post('/users/delete/:username', async (req, res) => {
+https.post('/users/delete/:username', async (req, res) => {
     const { username } = req.params;
 
     try {
@@ -129,7 +129,7 @@ app.post('/users/delete/:username', async (req, res) => {
     }
 });
 // Login route
-app.post('/login', async (req, res) => {
+https.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username });
@@ -176,12 +176,12 @@ const auth = (roles = []) => {
 };
 
 // Protected route example
-app.get('/admin', auth(['admin']), (req, res) => {
+https.get('/admin', auth(['admin']), (req, res) => {
     res.send('Admin content');
 });
 
 // Add a drone
-app.post('/drones', async (req, res) => {
+https.post('/drones', async (req, res) => {
     const { imei, drone_name, model,  range,assignedUser } = req.body;
     try {
         const drone = new Drone({ imei, drone_name, model, range ,assignedUser});
@@ -193,7 +193,7 @@ app.post('/drones', async (req, res) => {
 });
 
 // Get all drones
-app.get('/drones', async (req, res) => {
+https.get('/drones', async (req, res) => {
     try {
         const drones = await Drone.find();
         res.json(drones);
@@ -203,7 +203,7 @@ app.get('/drones', async (req, res) => {
 });
 
 // Get a single drone
-app.get('/drones/:id', async (req, res) => {
+https.get('/drones/:id', async (req, res) => {
     try {
         const drone = await Drone.findById(req.params.id);
         if (!drone) {
@@ -216,7 +216,7 @@ app.get('/drones/:id', async (req, res) => {
 });
 
 // Update a drone
-app.put('/drones/:id', async (req, res) => {
+https.put('/drones/:id', async (req, res) => {
     const { imei, drone_name, model, status, range } = req.body;
     try {
         const drone = await Drone.findById(req.params.id);
@@ -236,7 +236,7 @@ app.put('/drones/:id', async (req, res) => {
 });
 
 // Delete a drone
-app.post('/drones/delete/:imei', async (req, res) => {
+https.post('/drones/delete/:imei', async (req, res) => {
     const { imei } = req.params;
     try {
         const drone = await Drone.findOneAndDelete({ imei });
@@ -248,7 +248,7 @@ app.post('/drones/delete/:imei', async (req, res) => {
         res.status(400).send({ 'message': 'Error deleting drone: ' + err.message });
     }
 });
-app.post('/assign-drones/:username', async (req, res) => {
+https.post('/assign-drones/:username', async (req, res) => {
     const { username } = req.params;
     const { droneIds } = req.body; // Expecting an array of drone IDs
 
@@ -276,7 +276,7 @@ app.post('/assign-drones/:username', async (req, res) => {
 });
 
 
-  app.get('/lastdata/:imei', async (req, res) => {
+  https.get('/lastdata/:imei', async (req, res) => {
     try {
       const { imei } = req.params;
   
@@ -297,7 +297,7 @@ app.post('/assign-drones/:username', async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-  app.get('/alldronesdata', async (req, res) => {
+  https.get('/alldronesdata', async (req, res) => {
     if (!redisClient.isOpen) {
         console.log("redis disconnected");
         await redisClient.connect();
@@ -343,7 +343,7 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-  app.get('/dronesdata/:username', async (req, res) => {
+  https.get('/dronesdata/:username', async (req, res) => {
     try {
       const { username } = req.params;
   
@@ -384,7 +384,7 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-app.get('/dronedata/:imei', async (req, res) => {
+https.get('/dronedata/:imei', async (req, res) => {
   try {
     const { imei } = req.params;
 console.log(imei);
@@ -414,7 +414,7 @@ console.log(imei);
   }
 });
 
-app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
+https.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
   try {
     const { t, startTime, endTime } = req.params;
 
@@ -444,6 +444,6 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 // Define routes...
 
-app.listen(API_PORT, () => console.log(`Server started on port ${API_PORT}`));
+//app.listen(API_PORT, () => console.log(`Server started on port ${API_PORT}`));
 
 export { app };
