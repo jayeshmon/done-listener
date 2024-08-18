@@ -441,8 +441,8 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 
 // Define routes...
-
-app.createServer(sslOptions, app).listen(API_PORT, () => {
+https.createServer(sslOptions, app).listen(API_PORT, () => {
   console.log(`HTTPS Server running on port ${API_PORT}`);
 });
+
 export { app };
