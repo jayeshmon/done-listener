@@ -33,9 +33,7 @@ const sslOptions = {
   key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
     cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
 };
-https.createServer(sslOptions, app).listen(API_PORT, () => {
-  console.log(`HTTPS Server running on port ${API_PORT}`);
-});
+
 
 
 // Connect to MongoDB
@@ -46,7 +44,7 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, a
 const secret = 'Astrazeneca9763'; // Use a strong secret in production
 
 
-https.post('/register', async (req, res) => {
+app.post('/register', async (req, res) => {
     const { username, password, role,mobile,companyName } = req.body;
     console.log(username);
     if (!username || !password || !role) {
@@ -66,7 +64,7 @@ https.post('/register', async (req, res) => {
         res.status(400).send({'message':'Error registering user: ' + err.message});
     }
 });
-https.get('/users', async (req, res) => {
+app.get('/users', async (req, res) => {
     try {
       const users = await User.find({});
       res.json(users);
@@ -74,7 +72,7 @@ https.get('/users', async (req, res) => {
       res.status(500).json({ message: 'Failed to fetch users', error: err.message });
     }
   });
-  https.get('/users/user', async (req, res) => {
+  app.get('/users/user', async (req, res) => {
     try {
       const users = await User.find({ role: 'user' });
       res.json(users);
@@ -83,7 +81,7 @@ https.get('/users', async (req, res) => {
     }
   });
 // Edit user route
-https.put('/users/:username', async (req, res) => {
+app.put('/users/:username', async (req, res) => {
     const { username } = req.params;
     const { password, role, mobile, companyName } = req.body;
 
@@ -112,7 +110,7 @@ https.put('/users/:username', async (req, res) => {
         res.status(400).send({'message':'Error updating user: ' + err.message});
     }
 });
-https.post('/users/delete/:username', async (req, res) => {
+app.post('/users/delete/:username', async (req, res) => {
     const { username } = req.params;
 
     try {
@@ -129,7 +127,7 @@ https.post('/users/delete/:username', async (req, res) => {
     }
 });
 // Login route
-https.post('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     try {
         const user = await User.findOne({ username });
@@ -176,12 +174,12 @@ const auth = (roles = []) => {
 };
 
 // Protected route example
-https.get('/admin', auth(['admin']), (req, res) => {
+app.get('/admin', auth(['admin']), (req, res) => {
     res.send('Admin content');
 });
 
 // Add a drone
-https.post('/drones', async (req, res) => {
+app.post('/drones', async (req, res) => {
     const { imei, drone_name, model,  range,assignedUser } = req.body;
     try {
         const drone = new Drone({ imei, drone_name, model, range ,assignedUser});
@@ -193,7 +191,7 @@ https.post('/drones', async (req, res) => {
 });
 
 // Get all drones
-https.get('/drones', async (req, res) => {
+app.get('/drones', async (req, res) => {
     try {
         const drones = await Drone.find();
         res.json(drones);
@@ -203,7 +201,7 @@ https.get('/drones', async (req, res) => {
 });
 
 // Get a single drone
-https.get('/drones/:id', async (req, res) => {
+app.get('/drones/:id', async (req, res) => {
     try {
         const drone = await Drone.findById(req.params.id);
         if (!drone) {
@@ -216,7 +214,7 @@ https.get('/drones/:id', async (req, res) => {
 });
 
 // Update a drone
-https.put('/drones/:id', async (req, res) => {
+app.put('/drones/:id', async (req, res) => {
     const { imei, drone_name, model, status, range } = req.body;
     try {
         const drone = await Drone.findById(req.params.id);
@@ -236,7 +234,7 @@ https.put('/drones/:id', async (req, res) => {
 });
 
 // Delete a drone
-https.post('/drones/delete/:imei', async (req, res) => {
+app.post('/drones/delete/:imei', async (req, res) => {
     const { imei } = req.params;
     try {
         const drone = await Drone.findOneAndDelete({ imei });
@@ -248,7 +246,7 @@ https.post('/drones/delete/:imei', async (req, res) => {
         res.status(400).send({ 'message': 'Error deleting drone: ' + err.message });
     }
 });
-https.post('/assign-drones/:username', async (req, res) => {
+app.post('/assign-drones/:username', async (req, res) => {
     const { username } = req.params;
     const { droneIds } = req.body; // Expecting an array of drone IDs
 
@@ -276,7 +274,7 @@ https.post('/assign-drones/:username', async (req, res) => {
 });
 
 
-  https.get('/lastdata/:imei', async (req, res) => {
+  app.get('/lastdata/:imei', async (req, res) => {
     try {
       const { imei } = req.params;
   
@@ -297,7 +295,7 @@ https.post('/assign-drones/:username', async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-  https.get('/alldronesdata', async (req, res) => {
+  app.get('/alldronesdata', async (req, res) => {
     if (!redisClient.isOpen) {
         console.log("redis disconnected");
         await redisClient.connect();
@@ -343,7 +341,7 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-  https.get('/dronesdata/:username', async (req, res) => {
+  app.get('/dronesdata/:username', async (req, res) => {
     try {
       const { username } = req.params;
   
@@ -384,7 +382,7 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
-https.get('/dronedata/:imei', async (req, res) => {
+app.get('/dronedata/:imei', async (req, res) => {
   try {
     const { imei } = req.params;
 console.log(imei);
@@ -414,7 +412,7 @@ console.log(imei);
   }
 });
 
-https.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
+app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
   try {
     const { t, startTime, endTime } = req.params;
 
@@ -444,6 +442,7 @@ https.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 // Define routes...
 
-app.listen(3001, () => console.log(`Server started on port `+' 3001'));
-
+app.createServer(sslOptions, app).listen(API_PORT, () => {
+  console.log(`HTTPS Server running on port ${API_PORT}`);
+});
 export { app };
