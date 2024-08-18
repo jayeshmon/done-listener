@@ -30,8 +30,8 @@ app.use(express.json());
 
 
 const sslOptions = {
-  key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
-    cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
+  key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
 };
 
 
