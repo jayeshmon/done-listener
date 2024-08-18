@@ -10,6 +10,9 @@ import { createClient } from 'redis';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 dotenv.config();
 const redisClient = createClient({
     socket: {
@@ -26,7 +29,7 @@ app.use(express.json());
 
 const sslOptions = {
   key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
-  cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
+    cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
 };
 https.createServer(sslOptions, app).listen(API_PORT, () => {
   console.log(`HTTPS Server running on port ${API_PORT}`);
