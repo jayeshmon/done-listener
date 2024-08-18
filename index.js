@@ -4,9 +4,7 @@ const mongoose = require('mongoose');
 const Ajv = require('ajv');
 const cors = require('cors');
 const { createClient } = require('redis');
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
+
 const app = express();
 app.use(express.json());
 
@@ -14,21 +12,11 @@ app.use(express.json());
 // Apply CORS middleware with options
 app.use(cors());
 
-
-
-const sslOptions = {
-  key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
-  cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
-};
-
-
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const REDIS_DB = process.env.REDIS_DB || 1;
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`HTTPS Server running on port ${PORT}`);
-});
+
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
   .then(() => console.log('Connected to MongoDB'))
