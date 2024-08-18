@@ -7,8 +7,10 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createClient } from 'redis';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 dotenv.config();
-console.log();
 const redisClient = createClient({
     socket: {
       host: 'localhost',
@@ -17,10 +19,12 @@ const redisClient = createClient({
   });
   redisClient.connect().catch(console.error);
   await redisClient.select(1);
-  
+ 
 const app = express();
 app.use(express.json());
-
+https.createServer(sslOptions, app).listen(API_PORT, () => {
+  console.log(`HTTPS Server running on port ${API_PORT}`);
+});
 const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
