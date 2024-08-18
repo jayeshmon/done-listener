@@ -22,6 +22,12 @@ const redisClient = createClient({
  
 const app = express();
 app.use(express.json());
+
+
+const sslOptions = {
+  key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
+  cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
+};
 https.createServer(sslOptions, app).listen(API_PORT, () => {
   console.log(`HTTPS Server running on port ${API_PORT}`);
 });
