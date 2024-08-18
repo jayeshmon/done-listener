@@ -21,7 +21,7 @@ const redisClient = createClient({
     }
   });
   redisClient.connect().catch(console.error);
-  await redisClient.select(1);
+  redisClient.select(1);
  
 const app = express();
 app.use(express.json());
