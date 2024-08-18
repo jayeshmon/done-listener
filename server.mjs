@@ -443,7 +443,7 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 
 // Define routes...
-const PORT = process.env.API_PORT || 5000 ;
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+
+app.listen(API_PORT, () => console.log(`Server started on port ${API_PORT}`));
 
 export { app };
