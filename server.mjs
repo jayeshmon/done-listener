@@ -10,6 +10,8 @@ import { createClient } from 'redis';
 import https from 'https';
 import fs from 'fs';
 import path from 'path';
+//npmconst cors = require('cors');
+import cors from 'cors';
 import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,7 +29,7 @@ const redisClient = createClient({
  
 const app = express();
 app.use(express.json());
-
+app.use(cors());
 
 const sslOptions = {
   key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
