@@ -35,6 +35,7 @@ https.createServer(sslOptions, app).listen(API_PORT, () => {
   console.log(`HTTPS Server running on port ${API_PORT}`);
 });
 const MONGO_URI = process.env.MONGO_URI;
+const API_PORT = process.env.API_PORT;
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
