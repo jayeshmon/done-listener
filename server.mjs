@@ -444,6 +444,6 @@ https.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 // Define routes...
 
-//app.listen(API_PORT, () => console.log(`Server started on port ${API_PORT}`));
+app.listen(3001, () => console.log(`Server started on port `+' 3001'));
 
 export { app };
