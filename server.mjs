@@ -7,15 +7,8 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { createClient } from 'redis';
-import https from 'https';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 dotenv.config();
-const MONGO_URI = process.env.MONGO_URI;
-const API_PORT = process.env.API_PORT;
+console.log();
 const redisClient = createClient({
     socket: {
       host: 'localhost',
@@ -23,18 +16,12 @@ const redisClient = createClient({
     }
   });
   redisClient.connect().catch(console.error);
-  redisClient.select(1);
- 
+  await redisClient.select(1);
+  
 const app = express();
 app.use(express.json());
 
-
-const sslOptions = {
-  key: fs.readFileSync(path.resolve(__dirname, 'server.key')),
-    cert: fs.readFileSync(path.resolve(__dirname, 'server.cert'))
-};
-
-
+const MONGO_URI = process.env.MONGO_URI;
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
@@ -441,8 +428,7 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 
 
 // Define routes...
-https.createServer(sslOptions, app).listen(API_PORT, () => {
-  console.log(`HTTPS Server running on port ${API_PORT}`);
-});
+const PORT = process.env.API_PORT || 5000 ;
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
 
 export { app };
