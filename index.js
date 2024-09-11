@@ -1,4 +1,5 @@
 require('dotenv').config();
+const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const Ajv = require('ajv');
@@ -16,6 +17,8 @@ const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const REDIS_DB = process.env.REDIS_DB || 1;
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
@@ -117,15 +120,30 @@ const validate = ajv.compile({
 });
 
 // Listener endpoint
-app.post('/drone-data', async (req, res) => {
-  const data = req.body;
+app.post('/parsedata', async (req, res) => {
+  // Extract the `vltjson` key from the request body
+  const vltjson = req.body.vltjson;
 
+  if (!vltjson) {
+    return res.status(400).send([{ instancePath: "", schemaPath: "#/required", keyword: "required", params: { missingProperty: "vltjson" }, message: "vltjson key is missing" }]);
+  }
+
+  let data;
+  try {
+    // Parse the `vltjson` value to a JavaScript array
+    data = JSON.parse(vltjson);
+  } catch (error) {
+    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "vltjson must be a valid JSON array" }]);
+  }
+
+  // Check if the parsed data is an array
   if (!Array.isArray(data)) {
-    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "must be array" }]);
+    return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "vltjson must be an array" }]);
   }
 
   const errors = [];
 
+  // Validate each item in the array
   for (const item of data) {
     const valid = validate(item);
     if (!valid) {
@@ -133,17 +151,20 @@ app.post('/drone-data', async (req, res) => {
     }
   }
 
+  // Return validation errors if any
   if (errors.length) {
     return res.status(400).send(errors);
   }
 
   try {
+    // Insert data into the database
     await DroneData.insertMany(data);
     
     // Store the last packet in Redis
     const lastData = data[data.length - 1];
     await redisClient.set(lastData.t, JSON.stringify(lastData));
 
+    // Send success response
     res.status(201).send({ 'response': 'Data saved successfully' });
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
