@@ -218,6 +218,9 @@ app.get('/drones/:id', async (req, res) => {
 // Update a drone
 app.put('/drones/:id', async (req, res) => {
     const { imei, drone_name, model, status, range ,assignedUser} = req.body;
+console.log("*************************");
+    console.log(assignedUser);
+    console.log("*************************");
     try {
         const drone = await Drone.findById(req.params.id);
         if (!drone) {
@@ -230,7 +233,7 @@ app.put('/drones/:id', async (req, res) => {
         drone.range = range;
         drone.assignedUser=assignedUser;
         await drone.save();
-        res.send('Drone updated');
+        res.send({'message':' Drone updated  '});
     } catch (err) {
         res.status(400).send({'message':'Error updating drone: ' + err.message});
     }
