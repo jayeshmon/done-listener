@@ -201,7 +201,7 @@ app.get('/drones/:id', async (req, res) => {
 
 // Update a drone
 app.put('/drones/:id', async (req, res) => {
-    const { imei, drone_name, model, status, range } = req.body;
+    const { imei, drone_name, model, status, range ,assignedUser} = req.body;
     try {
         const drone = await Drone.findById(req.params.id);
         if (!drone) {
@@ -212,6 +212,7 @@ app.put('/drones/:id', async (req, res) => {
         drone.model = model;
         drone.status = status;
         drone.range = range;
+        drone.assignedUser=assignedUser;
         await drone.save();
         res.send('Drone updated');
     } catch (err) {
