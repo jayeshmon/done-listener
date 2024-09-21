@@ -452,17 +452,42 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
   }
 });
 // Get the sum of kilometers covered by all drones
-app.get('/total-km', async (req, res) => {
+
+
+
+
+app.get('/trip', async (req, res) => {
   try {
-    // Fetch the total kilometers covered by all drones from MongoDB
+    const todayDate = getTodayDate(); // Get today's date in "YYYY-MM-DD" format
+    const todayStart = new Date(todayDate + 'T00:00:00Z'); // Start of the day (UTC)
+    const todayEnd = new Date(todayDate + 'T23:59:59Z'); // End of the day (UTC)
+
+    // Fetch all rows matching today's date
+    const matchingData = await DroneTripData.find({
+      T: { $gte: todayStart, $lte: todayEnd }
+    });
+
+    // Log the matching rows
+    console.log(`Matching rows for today: ${JSON.stringify(matchingData, null, 2)}`);
+
     const totalKmData = await DroneTripData.aggregate([
+      {
+        $match: {
+          T: { $gte: todayStart, $lte: todayEnd } // Match today's date
+        }
+      },
       {
         $group: {
           _id: null,
-          totalKmCovered: { $sum: "$kmCovered" }
+          totalKmCovered: {
+            $sum: { $toDouble: "$COV_AREA" } // Convert COV_AREA to double before summing
+          }
         }
       }
     ]);
+
+    // Log the aggregation result
+    console.log(`Aggregation result: ${JSON.stringify(totalKmData, null, 2)}`);
 
     const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
     res.json({ totalKmCovered });
@@ -472,39 +497,14 @@ app.get('/total-km', async (req, res) => {
   }
 });
 
-// Get the sum of kilometers covered for a particular drone by its IMEI
-app.get('/total-km/:imei/km', async (req, res) => {
-  const { imei } = req.params;
 
-  try {
-    // Fetch the total kilometers covered for a specific drone from MongoDB
-    const droneKmData = await DroneTripData.aggregate([
-      {
-        $match: { imei: imei }
-      },
-      {
-        $group: {
-          _id: "$imei",
-          totalKmCovered: { $sum: "$kmCovered" }
-        }
-      }
-    ]);
 
-    const kmCovered = droneKmData.length > 0 ? droneKmData[0].totalKmCovered : 0;
-    res.json({ imei, kmCovered });
-  } catch (error) {
-    console.error('Error fetching drone trip data:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
-{ message: 'Connected to MongoDB' }
-Today's date: 2024-09-21
-Matching rows for today: []
-Aggregation result: []
-Today's date: 2024-09-21
-Matching rows for today: []
-Aggregation result: []
+
+
+
+
+
 
 app.get('/trip/:imei/km', async (req, res) => {
   const { imei } = req.params;
