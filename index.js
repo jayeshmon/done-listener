@@ -13,10 +13,7 @@ app.use(express.json());
 
 // Apply CORS middleware with options
 app.use(cors());
-const sslOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
-};
+
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -223,12 +220,7 @@ app.post('/parsedata', async (req, res) => {
   }
 });
 
-if(process.env.PROD==1){
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`HTTPS Server running on port ${PORT}`);
-});
-}else{
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-}

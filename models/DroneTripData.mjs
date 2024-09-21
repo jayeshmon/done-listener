@@ -36,7 +36,7 @@ const DroneTripDataSchema = new mongoose.Schema({
   SS: String,
   p: Number,
   FN: String
-}, { collection: 'drone_data' });
+}, { collection: 'dronetripdata' });
 
 const DroneTripData = mongoose.model('DroneTripData', DroneTripDataSchema);
 export { DroneTripData };
