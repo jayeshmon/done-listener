@@ -3,17 +3,14 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const mongoose = require('mongoose');
 const Ajv = require('ajv');
-const fs= require('fs');
 const cors = require('cors');
 const { createClient } = require('redis');
 
 const app = express();
 app.use(express.json());
 
-
 // Apply CORS middleware with options
 app.use(cors());
-
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -36,7 +33,7 @@ redisClient.on('error', (err) => {
 
 redisClient.connect().then(() => {
   console.log('Connected to Redis');
-  redisClient.select(REDIS_DB);
+  redisClient.select(REDIS_DB); // Default Redis DB
 });
 
 // Define the drone data schema
@@ -75,6 +72,7 @@ const droneDataSchema = new mongoose.Schema({
   p: Number,
   FN: String
 }, { collection: 'drone_data' });
+
 const droneTripDataSchema = new mongoose.Schema({
   t: String,
   VD: String,
@@ -154,14 +152,12 @@ const validate = ajv.compile({
     FN: { type: 'string' }
   },
   required: ['t', 'VD', 'FV', 'AD', 'PS', 'v', 'DM', 'T', 'l', 'g', 's', 'ALT', 'SN', 'HD', 'FL_MOD', 'MC', 'MN', 
-  //'MV',
    'IV', 'ROLL', 'YAW', 'PITCH', 'WTR_QTY', 'CONLQD', 'FLW_RT', 'GPSCNT', 'TNKLVL', 'PLAN_AREA', 'COV_AREA', 'BOUNDARY', 'SS', 'p', 'FN'],
   additionalProperties: false
 });
 
 // Listener endpoint
 app.post('/parsedata', async (req, res) => {
-  // Extract the `vltjson` key from the request body
   const vltjson = req.body.vltjson;
 
   if (!vltjson) {
@@ -170,56 +166,57 @@ app.post('/parsedata', async (req, res) => {
 
   let data;
   try {
-    // Parse the `vltjson` value to a JavaScript array
     data = JSON.parse(vltjson);
   } catch (error) {
     return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "vltjson must be a valid JSON array" }]);
   }
 
-  // Check if the parsed data is an array
   if (!Array.isArray(data)) {
     return res.status(400).send([{ instancePath: "", schemaPath: "#/type", keyword: "type", params: { type: "array" }, message: "vltjson must be an array" }]);
   }
 
   const errors = [];
 
-  // Validate each item in the array
   for (const item of data) {
     const valid = validate(item);
-    
     if (!valid) {
       errors.push({ item, errors: validate.errors });
     }
-    
   }
 
-  // Return validation errors if any
   if (errors.length) {
     return res.status(400).send(errors);
   }
 
   try {
-    // Insert data into the database
-    if(data[0].AD==1){
+    // Insert data into the correct collection based on the 'AD' field
+    if (data[0].AD === 1) {
       console.log("111111111111111");
+
+      // Insert into drone_data collection
       await DroneData.insertMany(data);
-    }else{
+
+      // Switch to Redis DB 2 and store the last packet
+      await redisClient.select(2);
+      const lastData = data[data.length - 1];
+      await redisClient.set(lastData.t, JSON.stringify(lastData));
+
+      // Optionally, switch back to the default Redis DB after storing data in DB 2
+      await redisClient.select(REDIS_DB);
+
+    } else if (data[0].AD === 2) {
       console.log("2222222222222222222222222222222222222222");
 
- await DroneTripData.insertMany(data);
+      // Insert into drone_trip_data collection
+      await DroneTripData.insertMany(data);
     }
-    // Store the last packet in Redis
-    const lastData = data[data.length - 1];
-    await redisClient.set(lastData.t, JSON.stringify(lastData));
 
-    // Send success response
     res.status(201).send({ 'response': 'Data saved successfully' });
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
     res.status(500).send('Error saving data');
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
