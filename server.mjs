@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { User } from './models/User.mjs';
 import { Drone } from './models/Drone.mjs';
 import { DroneData } from './models/DroneData.mjs';
+import { DroneTripData } from './models/DroneTripData.mjs';
 import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
