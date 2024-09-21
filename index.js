@@ -203,6 +203,7 @@ app.post('/parsedata', async (req, res) => {
 
       // Optionally, switch back to the default Redis DB after storing data in DB 2
       await redisClient.select(REDIS_DB);
+      res.status(201).send({ 'response': 'Data saved successfully' });
 
     } else if (data[0].AD === 2) {
            // Switch to Redis DB 2 and store the last packet
@@ -215,9 +216,10 @@ app.post('/parsedata', async (req, res) => {
 
       // Insert into drone_trip_data collection
       await DroneTripData.insertMany(data);
+      res.status(201).send({ 'response': 'Data saved successfully' });
     }
 
-    res.status(201).send({ 'response': 'Data saved successfully' });
+   
   } catch (err) {
     console.error('Error saving data:', err); // Log the error
     res.status(500).send('Error saving data');
