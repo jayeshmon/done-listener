@@ -471,11 +471,7 @@ app.get('/trip', async (req, res) => {
     console.log(`Matching rows for today: ${JSON.stringify(matchingData, null, 2)}`);
 
     const totalKmData = await DroneTripData.aggregate([
-      {
-        $match: {
-          T: { $gte: todayStart, $lte: todayEnd } // Match today's date
-        }
-      },
+     
       {
         $group: {
           _id: null,
