@@ -446,7 +446,8 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 });
 // Get the sum of kilometers covered by all drones
 app.get('/drones/total-km', async (req, res) => {
-  try {
+  console.log("total km");
+  
       // Switch to Redis DB 2
       await redisClient.select(2);
 
@@ -459,6 +460,7 @@ app.get('/drones/total-km', async (req, res) => {
       for (const drone of drones) {
           // Fetch the last data from Redis for each drone using IMEI
           const redisData = await redisClient.get(drone.imei);
+          console.log(redisData);
           if (redisData) {
               const latestData = JSON.parse(redisData);
               console.log(latestData);
@@ -469,10 +471,7 @@ app.get('/drones/total-km', async (req, res) => {
       }
 
       res.json({ totalKmCovered });
-  } catch (error) {
-      console.error('Error fetching drones or data:', error);
-      res.status(500).json({ message: 'Internal server error' });
-  }
+  
 });
 
 // Get the sum of kilometers covered for a particular drone by its IMEI
