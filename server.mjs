@@ -461,6 +461,7 @@ app.get('/drones/total-km', async (req, res) => {
           const redisData = await redisClient.get(drone.imei);
           if (redisData) {
               const latestData = JSON.parse(redisData);
+              console.log(latestData);
               if (latestData.kmCovered) {
                   totalKmCovered += latestData.kmCovered;
               }
