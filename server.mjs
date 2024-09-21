@@ -497,7 +497,7 @@ app.get('/total-km/:imei/km', async (req, res) => {
   }
 });
 
-app.get('/total-km', async (req, res) => {
+app.get('/trip', async (req, res) => {
   try {
     const todayDate = getTodayDate();
 
@@ -523,7 +523,7 @@ app.get('/total-km', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-app.get('/total-km/:imei/km', async (req, res) => {
+app.get('/trip/:imei/km', async (req, res) => {
   const { imei } = req.params;
 
   try {
@@ -541,6 +541,7 @@ app.get('/total-km/:imei/km', async (req, res) => {
         $group: {
           _id: "$imei",
           totalKmCovered: { $sum: "$COV_AREA" } // Assuming km is in the COV_AREA field
+          
         }
       }
     ]);
