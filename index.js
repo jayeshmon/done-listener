@@ -216,7 +216,7 @@ app.post('/parsedata', async (req, res) => {
 
       // Insert into drone_trip_data collection
       await DroneTripData.insertMany(data);
-      res.status(201).send({ 'response': 'Data saved successfully' });
+      res.status(201).send({ 'response': 'Data saved successfully to 2' });
     }
 
    
