@@ -502,9 +502,17 @@ app.get('/trip', async (req, res) => {
   try {
     // Helper function to get today's date in "YYYY-MM-DD" format
     const todayDate = getTodayDate();
-    console.log(todayDate);
+    console.log(`Today's date: ${todayDate}`);
 
-    // Fetch the total kilometers covered by all drones from MongoDB, filtered by today's date
+    // Fetch all rows matching today's date
+    const matchingData = await DroneTripData.find({
+      T: { $regex: `^${todayDate}` } // Match only today's date
+    });
+
+    // Log the matching rows
+    console.log(`Matching rows for today: ${JSON.stringify(matchingData, null, 2)}`);
+
+    // Proceed with aggregation
     const totalKmData = await DroneTripData.aggregate([
       {
         $match: {
@@ -521,6 +529,9 @@ app.get('/trip', async (req, res) => {
       }
     ]);
 
+    // Log the aggregation result
+    console.log(`Aggregation result: ${JSON.stringify(totalKmData, null, 2)}`);
+
     const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
     res.json({ totalKmCovered });
   } catch (error) {
@@ -534,9 +545,18 @@ app.get('/trip/:imei/km', async (req, res) => {
 
   try {
     const todayDate = getTodayDate();
-    console.log(todayDate);
+    console.log(`Today's date: ${todayDate}`);
 
-    // Fetch the total kilometers covered for the specified drone from MongoDB, filtered by today's date
+    // Fetch all rows for the given IMEI matching today's date
+    const matchingData = await DroneTripData.find({
+      imei: imei,
+      T: { $regex: `^${todayDate}` } // Match only today's date
+    });
+
+    // Log the matching rows
+    console.log(`Matching rows for IMEI ${imei} today: ${JSON.stringify(matchingData, null, 2)}`);
+
+    // Proceed with aggregation
     const droneKmData = await DroneTripData.aggregate([
       {
         $match: {
@@ -553,6 +573,9 @@ app.get('/trip/:imei/km', async (req, res) => {
         }
       }
     ]);
+
+    // Log the aggregation result
+    console.log(`Aggregation result for IMEI ${imei}: ${JSON.stringify(droneKmData, null, 2)}`);
 
     const kmCovered = droneKmData.length > 0 ? droneKmData[0].totalKmCovered : 0;
     res.json({ imei, kmCovered });
