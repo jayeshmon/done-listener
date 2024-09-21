@@ -462,8 +462,8 @@ app.get('/drones/total-km', async (req, res) => {
           if (redisData) {
               const latestData = JSON.parse(redisData);
               console.log(latestData);
-              if (latestData.kmCovered) {
-                  totalKmCovered += latestData.kmCovered;
+              if (latestData.COV_AREA) {
+                  totalKmCovered += latestData.COV_AREA;
               }
           }
       }
