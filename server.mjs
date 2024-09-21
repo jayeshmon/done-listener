@@ -44,7 +44,13 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, a
     .catch(err => console.error('Could not connect to MongoDB', err));
 
 const secret = 'Astrazeneca9763'; // Use a strong secret in production
-
+const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 app.post('/register', async (req, res) => {
     const { username, password, role,mobile,companyName } = req.body;
@@ -447,56 +453,103 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
 // Get the sum of kilometers covered by all drones
 app.get('/total-km', async (req, res) => {
   try {
-      // Switch to Redis DB 2
-      await redisClient.select(2);
-
-      // Fetch all drones from MongoDB
-      const drones = await Drone.find();
-
-      let totalKmCovered = 0;
-
-      // Iterate over each drone to fetch their latest data from Redis
-      for (const drone of drones) {
-          // Fetch the last data from Redis for each drone using IMEI
-          const redisData = await redisClient.get(drone.imei);
-          if (redisData) {
-              const latestData = JSON.parse(redisData);
-              console.log(latestData);
-              if (latestData.COV_AREA) {
-                  totalKmCovered += latestData.COV_AREA;
-              }
-          }
+    // Fetch the total kilometers covered by all drones from MongoDB
+    const totalKmData = await DroneTripData.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalKmCovered: { $sum: "$kmCovered" }
+        }
       }
+    ]);
 
-      res.json({ totalKmCovered });
+    const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
+    res.json({ totalKmCovered });
   } catch (error) {
-      console.error('Error fetching drones or data:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error('Error fetching drone trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
 // Get the sum of kilometers covered for a particular drone by its IMEI
-app.get('/drones/:imei/km', async (req, res) => {
+app.get('/total-km/:imei/km', async (req, res) => {
   const { imei } = req.params;
-  
+
   try {
-      // Switch to Redis DB 2
-      await redisClient.select(2);
-
-      // Fetch the last data from Redis for the specified drone's IMEI
-      const redisData = await redisClient.get(imei);
-
-      if (!redisData) {
-          return res.status(404).json({ message: 'No data found for the given drone IMEI' });
+    // Fetch the total kilometers covered for a specific drone from MongoDB
+    const droneKmData = await DroneTripData.aggregate([
+      {
+        $match: { imei: imei }
+      },
+      {
+        $group: {
+          _id: "$imei",
+          totalKmCovered: { $sum: "$kmCovered" }
+        }
       }
+    ]);
 
-      const latestData = JSON.parse(redisData);
-      const kmCovered = latestData.kmCovered || 0;
-
-      res.json({ imei, kmCovered });
+    const kmCovered = droneKmData.length > 0 ? droneKmData[0].totalKmCovered : 0;
+    res.json({ imei, kmCovered });
   } catch (error) {
-      console.error('Error fetching drone data:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    console.error('Error fetching drone trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+app.get('/total-km', async (req, res) => {
+  try {
+    const todayDate = getTodayDate();
+
+    // Fetch the total kilometers covered by all drones from MongoDB, filtered by today's date
+    const totalKmData = await DroneTripData.aggregate([
+      {
+        $match: {
+          T: { $regex: `^${todayDate}` } // Match only today's date
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalKmCovered: { $sum: "$COV_AREA" } // Assuming km is in the COV_AREA field
+        }
+      }
+    ]);
+
+    const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
+    res.json({ totalKmCovered });
+  } catch (error) {
+    console.error('Error fetching drone trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+app.get('/total-km/:imei/km', async (req, res) => {
+  const { imei } = req.params;
+
+  try {
+    const todayDate = getTodayDate();
+
+    // Fetch the total kilometers covered for the specified drone from MongoDB, filtered by today's date
+    const droneKmData = await DroneTripData.aggregate([
+      {
+        $match: {
+          imei: imei,
+          T: { $regex: `^${todayDate}` } // Match only today's date
+        }
+      },
+      {
+        $group: {
+          _id: "$imei",
+          totalKmCovered: { $sum: "$COV_AREA" } // Assuming km is in the COV_AREA field
+        }
+      }
+    ]);
+
+    const kmCovered = droneKmData.length > 0 ? droneKmData[0].totalKmCovered : 0;
+    res.json({ imei, kmCovered });
+  } catch (error) {
+    console.error('Error fetching drone trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
