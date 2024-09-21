@@ -32,10 +32,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-//const sslOptions = {
-  //key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
-    //cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
-//};
+const sslOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
+};
 
 
 
