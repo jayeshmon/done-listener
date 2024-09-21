@@ -12,6 +12,10 @@ app.use(express.json());
 
 // Apply CORS middleware with options
 app.use(cors());
+const sslOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
+};
 
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -73,8 +77,44 @@ const droneDataSchema = new mongoose.Schema({
   p: Number,
   FN: String
 }, { collection: 'drone_data' });
+const droneTripDataSchema = new mongoose.Schema({
+  t: String,
+  VD: String,
+  FV: String,
+  AD: Number,
+  PS: String,
+  v: String,
+  DM: String,
+  T: String,
+  l: String,
+  g: String,
+  s: String,
+  ALT: String,
+  SN: String,
+  HD: String,
+  FL_MOD: String,
+  MC: String,
+  MN: String,
+  MV: String,
+  IV: String,
+  ROLL: String,
+  YAW: String,
+  PITCH: String,
+  WTR_QTY: String,
+  CONLQD: String,
+  FLW_RT: String,
+  GPSCNT: String,
+  TNKLVL: String,
+  PLAN_AREA: String,
+  COV_AREA: String,
+  BOUNDARY: String,
+  SS: String,
+  p: Number,
+  FN: String
+}, { collection: 'drone_trip_data' });
 
 const DroneData = mongoose.model('DroneData', droneDataSchema);
+const DroneTripData = mongoose.model('DroneTripData', droneTripDataSchema);
 
 // Define AJV schema
 const ajv = new Ajv();
@@ -115,7 +155,9 @@ const validate = ajv.compile({
     p: { type: 'number' },
     FN: { type: 'string' }
   },
-  required: ['t', 'VD', 'FV', 'AD', 'PS', 'v', 'DM', 'T', 'l', 'g', 's', 'ALT', 'SN', 'HD', 'FL_MOD', 'MC', 'MN', 'MV', 'IV', 'ROLL', 'YAW', 'PITCH', 'WTR_QTY', 'CONLQD', 'FLW_RT', 'GPSCNT', 'TNKLVL', 'PLAN_AREA', 'COV_AREA', 'BOUNDARY', 'SS', 'p', 'FN'],
+  required: ['t', 'VD', 'FV', 'AD', 'PS', 'v', 'DM', 'T', 'l', 'g', 's', 'ALT', 'SN', 'HD', 'FL_MOD', 'MC', 'MN', 
+  //'MV',
+   'IV', 'ROLL', 'YAW', 'PITCH', 'WTR_QTY', 'CONLQD', 'FLW_RT', 'GPSCNT', 'TNKLVL', 'PLAN_AREA', 'COV_AREA', 'BOUNDARY', 'SS', 'p', 'FN'],
   additionalProperties: false
 });
 
@@ -146,9 +188,11 @@ app.post('/parsedata', async (req, res) => {
   // Validate each item in the array
   for (const item of data) {
     const valid = validate(item);
+    
     if (!valid) {
       errors.push({ item, errors: validate.errors });
     }
+    
   }
 
   // Return validation errors if any
@@ -158,8 +202,14 @@ app.post('/parsedata', async (req, res) => {
 
   try {
     // Insert data into the database
-    await DroneData.insertMany(data);
-    
+    if(data[0].AD==1){
+      console.log("111111111111111");
+      await DroneData.insertMany(data);
+    }else{
+      console.log("2222222222222222222222222222222222222222");
+
+ await DroneTripData.insertMany(data);
+    }
     // Store the last packet in Redis
     const lastData = data[data.length - 1];
     await redisClient.set(lastData.t, JSON.stringify(lastData));
@@ -172,6 +222,12 @@ app.post('/parsedata', async (req, res) => {
   }
 });
 
+if(process.env.PROD==1){
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`HTTPS Server running on port ${PORT}`);
+});
+}else{
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+}

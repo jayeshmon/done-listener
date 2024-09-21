@@ -444,11 +444,71 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+// Get the sum of kilometers covered by all drones
+app.get('/drones/total-km', async (req, res) => {
+  try {
+      // Switch to Redis DB 2
+      await redisClient.select(2);
+
+      // Fetch all drones from MongoDB
+      const drones = await Drone.find();
+
+      let totalKmCovered = 0;
+
+      // Iterate over each drone to fetch their latest data from Redis
+      for (const drone of drones) {
+          // Fetch the last data from Redis for each drone using IMEI
+          const redisData = await redisClient.get(drone.imei);
+          if (redisData) {
+              const latestData = JSON.parse(redisData);
+              if (latestData.kmCovered) {
+                  totalKmCovered += latestData.kmCovered;
+              }
+          }
+      }
+
+      res.json({ totalKmCovered });
+  } catch (error) {
+      console.error('Error fetching drones or data:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Get the sum of kilometers covered for a particular drone by its IMEI
+app.get('/drones/:imei/km', async (req, res) => {
+  const { imei } = req.params;
+  
+  try {
+      // Switch to Redis DB 2
+      await redisClient.select(2);
+
+      // Fetch the last data from Redis for the specified drone's IMEI
+      const redisData = await redisClient.get(imei);
+
+      if (!redisData) {
+          return res.status(404).json({ message: 'No data found for the given drone IMEI' });
+      }
+
+      const latestData = JSON.parse(redisData);
+      const kmCovered = latestData.kmCovered || 0;
+
+      res.json({ imei, kmCovered });
+  } catch (error) {
+      console.error('Error fetching drone data:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 // Define routes...
-https.createServer(sslOptions, app).listen(API_PORT, () => {
-  console.log(`HTTPS Server running on port ${API_PORT}`);
-});
+if(process.env.PROD==1){
+  https.createServer(sslOptions, app).listen(API_PORT, () => {
+    console.log(`HTTPS Server running on port ${API_PORT}`);
+  });
+  }else{
+  app.listen(API_PORT, () => {
+    console.log(`Server is running on port ${API_PORT}`);
+  });
+  }
 
 export { app };
