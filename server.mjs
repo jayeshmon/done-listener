@@ -498,7 +498,16 @@ app.get('/total-km/:imei/km', async (req, res) => {
 });
 
 app.get('/trip', async (req, res) => {
-  //try {
+  try {
+    // Helper function to get today's date in "YYYY-MM-DD" format
+    const getTodayDate = () => {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+      const day = String(today.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     const todayDate = getTodayDate();
 
     // Fetch the total kilometers covered by all drones from MongoDB, filtered by today's date
@@ -518,11 +527,12 @@ app.get('/trip', async (req, res) => {
 
     const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
     res.json({ totalKmCovered });
-  //} catch (error) {
-   // console.error('Error fetching drone trip data:', error);
-    //res.status(500).json({ message: 'Internal server error' });
-  //}
+  } catch (error) {
+    console.error('Error fetching drone trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
+
 app.get('/trip/:imei/km', async (req, res) => {
   const { imei } = req.params;
 
