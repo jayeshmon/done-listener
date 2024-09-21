@@ -501,15 +501,8 @@ app.get('/total-km/:imei/km', async (req, res) => {
 app.get('/trip', async (req, res) => {
   try {
     // Helper function to get today's date in "YYYY-MM-DD" format
-    const getTodayDate = () => {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-      const day = String(today.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
     const todayDate = getTodayDate();
+    console.log(todayDate);
 
     // Fetch the total kilometers covered by all drones from MongoDB, filtered by today's date
     const totalKmData = await DroneTripData.aggregate([
@@ -521,7 +514,9 @@ app.get('/trip', async (req, res) => {
       {
         $group: {
           _id: null,
-          totalKmCovered: { $sum: "$COV_AREA" } // Assuming km is in the COV_AREA field
+          totalKmCovered: {
+            $sum: { $toDouble: "$COV_AREA" } // Convert COV_AREA to double before summing
+          }
         }
       }
     ]);
@@ -539,6 +534,7 @@ app.get('/trip/:imei/km', async (req, res) => {
 
   try {
     const todayDate = getTodayDate();
+    console.log(todayDate);
 
     // Fetch the total kilometers covered for the specified drone from MongoDB, filtered by today's date
     const droneKmData = await DroneTripData.aggregate([
@@ -551,8 +547,9 @@ app.get('/trip/:imei/km', async (req, res) => {
       {
         $group: {
           _id: "$imei",
-          totalKmCovered: { $sum: "$COV_AREA" } // Assuming km is in the COV_AREA field
-          
+          totalKmCovered: {
+            $sum: { $toDouble: "$COV_AREA" } // Convert COV_AREA to double before summing
+          }
         }
       }
     ]);
@@ -564,6 +561,7 @@ app.get('/trip/:imei/km', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 
 // Define routes...
