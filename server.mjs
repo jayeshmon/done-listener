@@ -498,47 +498,13 @@ app.get('/total-km/:imei/km', async (req, res) => {
   }
 });
 
-app.get('/trip', async (req, res) => {
-  try {
-    // Helper function to get today's date in "YYYY-MM-DD" format
-    const todayDate = getTodayDate();
-    console.log(`Today's date: ${todayDate}`);
-
-    // Fetch all rows matching today's date
-    const matchingData = await DroneTripData.find({
-      T: { $regex: `^${todayDate}` } // Match only today's date
-    });
-
-    // Log the matching rows
-    console.log(`Matching rows for today: ${JSON.stringify(matchingData, null, 2)}`);
-
-    // Proceed with aggregation
-    const totalKmData = await DroneTripData.aggregate([
-      {
-        $match: {
-          T: { $regex: `^${todayDate}` } // Match only today's date
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalKmCovered: {
-            $sum: { $toDouble: "$COV_AREA" } // Convert COV_AREA to double before summing
-          }
-        }
-      }
-    ]);
-
-    // Log the aggregation result
-    console.log(`Aggregation result: ${JSON.stringify(totalKmData, null, 2)}`);
-
-    const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
-    res.json({ totalKmCovered });
-  } catch (error) {
-    console.error('Error fetching drone trip data:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+{ message: 'Connected to MongoDB' }
+Today's date: 2024-09-21
+Matching rows for today: []
+Aggregation result: []
+Today's date: 2024-09-21
+Matching rows for today: []
+Aggregation result: []
 
 app.get('/trip/:imei/km', async (req, res) => {
   const { imei } = req.params;
