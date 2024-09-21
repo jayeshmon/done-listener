@@ -197,7 +197,7 @@ app.post('/parsedata', async (req, res) => {
       await DroneData.insertMany(data);
 
       // Switch to Redis DB 2 and store the last packet
-      await redisClient.select(2);
+      await redisClient.select(1);
       const lastData = data[data.length - 1];
       await redisClient.set(lastData.t, JSON.stringify(lastData));
 
@@ -205,7 +205,13 @@ app.post('/parsedata', async (req, res) => {
       await redisClient.select(REDIS_DB);
 
     } else if (data[0].AD === 2) {
-      console.log("2222222222222222222222222222222222222222");
+           // Switch to Redis DB 2 and store the last packet
+           await redisClient.select(2);
+           const lastData = data[data.length - 1];
+           await redisClient.set(lastData.t, JSON.stringify(lastData));
+     
+           // Optionally, switch back to the default Redis DB after storing data in DB 2
+           await redisClient.select(REDIS_DB);
 
       // Insert into drone_trip_data collection
       await DroneTripData.insertMany(data);
