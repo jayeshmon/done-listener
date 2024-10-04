@@ -213,6 +213,7 @@ app.post('/parsedata', async (req, res) => {
      
            // Optionally, switch back to the default Redis DB after storing data in DB 2
            await redisClient.select(REDIS_DB);
+           await redisClient.set(lastData.t, JSON.stringify(lastData));
 
       // Insert into drone_trip_data collection
       await DroneTripData.insertMany(data);

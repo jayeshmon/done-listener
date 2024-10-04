@@ -19,6 +19,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const MONGO_URI = process.env.MONGO_URI;
 const API_PORT = process.env.API_PORT;
+const PROD = process.env.PROD;
 const redisClient = createClient({
     socket: {
       host: 'localhost',
@@ -32,10 +33,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const sslOptions = {
-  key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
-};
 
 
 
@@ -491,7 +488,7 @@ app.get('/trip/:imei/km', async (req, res) => {
 
   try {
     const todayDate = getTodayDate();
-    console.log(todayDate);
+    //console.log(todayDate);
 
     // Fetch the total kilometers covered for the specified drone from MongoDB, filtered by today's date
     const droneKmData = await DroneTripData.aggregate([
@@ -522,7 +519,12 @@ app.get('/trip/:imei/km', async (req, res) => {
 
 
 // Define routes...
-if(process.env.PROD==1){
+if(PROD==1){
+  const sslOptions = {
+    key: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/privkey.pem'),
+      cert: fs.readFileSync('/etc/letsencrypt/live/dashboard.fuselage.co.in/cert.pem')
+  };
+  
   https.createServer(sslOptions, app).listen(API_PORT, () => {
     console.log(`HTTPS Server running on port ${API_PORT}`);
   });
