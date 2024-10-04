@@ -191,7 +191,9 @@ app.post('/parsedata', async (req, res) => {
   try {
     // Insert data into the correct collection based on the 'AD' field
     if (data[0].AD === 1) {
-      console.log("111111111111111");
+      console.log("*************ALERT 2**************");
+      console.log(data);
+      console.log("**********************************");
 
       // Insert into drone_data collection
       await DroneData.insertMany(data);
@@ -217,6 +219,9 @@ app.post('/parsedata', async (req, res) => {
 
       // Insert into drone_trip_data collection
       await DroneTripData.insertMany(data);
+      console.log("*************ALERT 2**************");
+      console.log(data);
+      console.log("**********************************");
       res.status(201).send({ 'response': 'Data saved successfully to 2' });
     }
 
