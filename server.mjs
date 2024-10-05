@@ -308,14 +308,14 @@ app.post('/assign-drones/:username', async (req, res) => {
   });
   app.get('/alldronesdata', async (req, res) => {
     if (!redisClient.isOpen) {
-        console.log("redis disconnected");
-        await redisClient.connect();
-        await redisClient.select(1);
-      }
-    console.log("alldronedata");
+      console.log("redis disconnected");
+      await redisClient.connect();
+      await redisClient.select(1);
+    }
+  
     try {
-      // Fetch all drones from MongoDB
-      const drones = await Drone.find();
+      // Fetch all drones from MongoDB and populate the assignedUser field
+      const drones = await Drone.find().populate('assignedUser', 'username'); // Only fetch username
   
       // Create an array to hold the combined data
       const combinedData = [];
@@ -324,14 +324,14 @@ app.post('/assign-drones/:username', async (req, res) => {
       for (const drone of drones) {
         // Fetch the latest data from Redis using the drone's IMEI as the key
         console.log(drone.imei);
-        let redisData="";
-        try{
-         redisData = await redisClient.get(drone.imei);
-        console.log(redisData);
-        }catch(err){
-console.log(err.message);
+        let redisData = "";
+        try {
+          redisData = await redisClient.get(drone.imei);
+          console.log(redisData);
+        } catch (err) {
+          console.log(err.message);
         }
-        
+  
         // Parse the Redis data (assuming it's stored as a JSON string)
         const latestData = redisData ? JSON.parse(redisData) : {};
   
@@ -339,6 +339,7 @@ console.log(err.message);
         const combinedDroneData = {
           ...drone.toObject(), // Convert Mongoose document to plain JavaScript object
           latestData,         // Add latest data from Redis
+          assignedUserName: drone.assignedUser ? drone.assignedUser.username : null // Add assigned user's username
         };
   
         // Add the combined data to the array
@@ -352,6 +353,7 @@ console.log(err.message);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
+  
   app.get('/dronesdata/:username', async (req, res) => {
     try {
       const { username } = req.params;
