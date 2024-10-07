@@ -191,7 +191,7 @@ app.post('/parsedata', async (req, res) => {
   try {
     // Insert data into the correct collection based on the 'AD' field
     if (data[0].AD === 1) {
-      console.log("*************ALERT 2**************");
+      console.log("*************ALERT 1**************");
       console.log(data);
       console.log("**********************************");
 
