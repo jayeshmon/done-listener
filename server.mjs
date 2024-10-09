@@ -428,7 +428,8 @@ console.log(imei);
 app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
   try {
     const { t, startTime, endTime } = req.params;
-
+startTime=startTime.replace("T"," ");
+endTime=endTime.replace("T"," ");
     console.log(t);
     // Query the database for drone data with the specified identifier and within the time range
     const droneData = await DroneData.find({
