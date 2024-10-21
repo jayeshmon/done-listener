@@ -608,6 +608,7 @@ app.get('/flying-hours', async (req, res) => {
 
     // Calculate flying hours per drone
     const droneFlyingTimes = {};
+   
     flights.forEach((flight) => {
       const { imei, AD, T } = flight;
       
