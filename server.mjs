@@ -497,7 +497,7 @@ app.get('/trip/user/:username', async (req, res) => {
 
     // Find all drones assigned to the user
     const drones = await Drone.find({ assignedUser: user._id });
-
+console.log(drones);
     // Get an array of all drone IMEIs
     const droneImeis = drones.map(drone => drone.imei);
 
