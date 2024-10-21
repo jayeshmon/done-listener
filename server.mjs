@@ -484,6 +484,64 @@ app.get('/trip', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+app.get('/trip/user/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find the user by their username
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Find all drones assigned to the user
+    const drones = await Drone.find({ assignedUser: user._id });
+
+    // Get an array of all drone IMEIs
+    const droneImeis = drones.map(drone => drone.imei);
+
+    if (droneImeis.length === 0) {
+      return res.json({ totalKmCovered: 0 }); // No drones assigned
+    }
+
+    // Get today's date in "YYYY-MM-DD" format
+    const todayDate = getTodayDate();
+
+    // Fetch the total kilometers covered for the user's drones, filtered by today's date
+    const totalKmData = await DroneTripData.aggregate([
+      {
+        '$match': {
+          T: { '$regex': `^${todayDate}` },  // Match only today's date
+          imei: { '$in': droneImeis }  // Match only drones assigned to this user
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalKmCovered: {
+            '$sum': { '$toDouble': "$COV_AREA" }  // Convert COV_AREA to double before summing
+          }
+        }
+      }
+    ]);
+
+    // Calculate the total kilometers covered
+    const totalKmCovered = totalKmData.length > 0 ? totalKmData[0].totalKmCovered : 0;
+
+    // Return the result
+    res.json({ totalKmCovered });
+    
+  } catch (error) {
+    console.error('Error fetching user trip data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+
 
 app.get('/trip/:imei/km', async (req, res) => {
   const { imei } = req.params;

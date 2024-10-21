@@ -190,8 +190,8 @@ app.post('/parsedata', async (req, res) => {
 
   try {
     // Insert data into the correct collection based on the 'AD' field
-    if (data[0].AD === 1) {
-      console.log("*************ALERT 1**************");
+    if (data[0].AD === 1 || data[0].AD === 3 || data[0].AD === 6 ) {
+      console.log("*************ALERT 1 , 3 , 6**************");
       console.log(data);
       console.log("**********************************");
 
