@@ -581,6 +581,207 @@ app.get('/trip/:imei/km', async (req, res) => {
 
 
 
+
+
+
+
+
+
+app.get('/flying-hours', async (req, res) => {
+  try {
+    const todayDate = getTodayDate();
+
+    // Fetch all data for today's date
+    const flights = await DroneTripData.aggregate([
+      {
+        '$match': {
+          T: { '$regex': `^${todayDate}` }, // Match today's date
+          AD: { '$in': [1, 2] } // Match only AD = 1 (start) and AD = 2 (end)
+        }
+      },
+      {
+        $sort: { imei: 1, T: 1 } // Sort by imei and timestamp
+      }
+    ]);
+
+    let totalFlyingHours = 0;
+
+    // Calculate flying hours per drone
+    const droneFlyingTimes = {};
+    flights.forEach((flight) => {
+      const { imei, AD, T } = flight;
+      
+      if (!droneFlyingTimes[imei]) {
+        droneFlyingTimes[imei] = { start: null, hours: 0 };
+      }
+
+      if (AD === 1) {
+        // AD=1 is the start of the flight
+        droneFlyingTimes[imei].start = new Date(T);
+      } else if (AD === 2 && droneFlyingTimes[imei].start) {
+        // AD=2 is the end of the flight, calculate the difference
+        const endTime = new Date(T);
+        const flightDuration = (endTime - droneFlyingTimes[imei].start) / 1000 / 60 / 60; // Convert milliseconds to hours
+        droneFlyingTimes[imei].hours += flightDuration;
+        droneFlyingTimes[imei].start = null; // Reset the start time for the next flight
+        totalFlyingHours += flightDuration;
+      }
+    });
+
+    res.json({ totalFlyingHours });
+  } catch (error) {
+    console.error('Error fetching flying hours data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+app.get('/flying-hours/user/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Find the user by their username
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Find all drones assigned to the user
+    const drones = await Drone.find({ assignedUser: user._id });
+
+    // Get an array of all drone IMEIs
+    const droneImeis = drones.map(drone => drone.imei);
+
+    if (droneImeis.length === 0) {
+      return res.json({ totalFlyingHours: 0 }); // No drones assigned
+    }
+
+    const todayDate = getTodayDate();
+
+    // Fetch data for user's drones for today's date
+    const flights = await DroneTripData.aggregate([
+      {
+        '$match': {
+          T: { '$regex': `^${todayDate}` }, // Match today's date
+          AD: { '$in': [1, 2] }, // Match AD = 1 (start) and AD = 2 (end)
+          imei: { '$in': droneImeis } // Filter by user's drones
+        }
+      },
+      {
+        $sort: { imei: 1, T: 1 } // Sort by imei and timestamp
+      }
+    ]);
+
+    let totalFlyingHours = 0;
+
+    // Calculate flying hours for user's drones
+    const droneFlyingTimes = {};
+    flights.forEach((flight) => {
+      const { imei, AD, T } = flight;
+
+      if (!droneFlyingTimes[imei]) {
+        droneFlyingTimes[imei] = { start: null, hours: 0 };
+      }
+
+      if (AD === 1) {
+        // AD=1 is the start of the flight
+        droneFlyingTimes[imei].start = new Date(T);
+      } else if (AD === 2 && droneFlyingTimes[imei].start) {
+        // AD=2 is the end of the flight, calculate the difference
+        const endTime = new Date(T);
+        const flightDuration = (endTime - droneFlyingTimes[imei].start) / 1000 / 60 / 60; // Convert milliseconds to hours
+        droneFlyingTimes[imei].hours += flightDuration;
+        droneFlyingTimes[imei].start = null; // Reset the start time for the next flight
+        totalFlyingHours += flightDuration;
+      }
+    });
+
+    res.json({ totalFlyingHours });
+  } catch (error) {
+    console.error('Error fetching flying hours for user:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+app.get('/flying-hours/:imei', async (req, res) => {
+  const { imei } = req.params;
+
+  try {
+    const todayDate = getTodayDate();
+
+    // Fetch data for the specific drone from MongoDB for today's date
+    const flights = await DroneTripData.aggregate([
+      {
+        '$match': {
+          T: { '$regex': `^${todayDate}` }, // Match today's date
+          AD: { '$in': [1, 2] }, // Match AD = 1 (start) and AD = 2 (end)
+          imei: imei // Match the specific drone IMEI
+        }
+      },
+      {
+        $sort: { T: 1 } // Sort by timestamp
+      }
+    ]);
+
+    let totalFlyingHours = 0;
+
+    // Calculate flying hours for the specific drone
+    let start = null;
+    flights.forEach((flight) => {
+      const { AD, T } = flight;
+
+      if (AD === 1) {
+        // AD=1 is the start of the flight
+        start = new Date(T);
+      } else if (AD === 2 && start) {
+        // AD=2 is the end of the flight, calculate the difference
+        const endTime = new Date(T);
+        const flightDuration = (endTime - start) / 1000 / 60 / 60; // Convert milliseconds to hours
+        totalFlyingHours += flightDuration;
+        start = null; // Reset the start time for the next flight
+      }
+    });
+
+    res.json({ imei, totalFlyingHours });
+  } catch (error) {
+    console.error('Error fetching flying hours for drone:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
 // Define routes...
 if(PROD==1){
   const sslOptions = {
