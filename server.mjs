@@ -464,7 +464,8 @@ app.get('/trip', async (req, res) => {
     const totalKmData = await DroneTripData.aggregate([
       {
         '$match': {
-          T: { '$regex': `^${todayDate}` } // Match only today's date
+          T: { '$regex': `^${todayDate}` },
+          AD:2 // Match only today's date
         }
       },
       {
@@ -497,7 +498,7 @@ app.get('/trip/user/:username', async (req, res) => {
 
     // Find all drones assigned to the user
     const drones = await Drone.find({ assignedUser: user._id });
-console.log(drones);
+
     // Get an array of all drone IMEIs
     const droneImeis = drones.map(drone => drone.imei);
 
@@ -512,7 +513,8 @@ console.log(drones);
     const totalKmData = await DroneTripData.aggregate([
       {
         '$match': {
-          T: { '$regex': `^${todayDate}` },  // Match only today's date
+          T: { '$regex': `^${todayDate}` },
+          AD:2,  // Match only today's date
           imei: { '$in': droneImeis }  // Match only drones assigned to this user
         }
       },
@@ -555,6 +557,7 @@ app.get('/trip/:imei/km', async (req, res) => {
       {
         $match: {
           imei: imei,
+          AD:2,
           T: { '$regex': `^${todayDate}` } // Match only today's date
         }
       },

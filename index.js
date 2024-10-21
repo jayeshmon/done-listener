@@ -189,27 +189,37 @@ app.post('/parsedata', async (req, res) => {
   }
 
   try {
+    
     // Insert data into the correct collection based on the 'AD' field
-    if (data[0].AD === 1 || data[0].AD === 3 || data[0].AD === 6 ) {
-      console.log("*************ALERT 1 , 3 , 6**************");
-      console.log(data);
-      console.log("**********************************");
-
+    if (data[0].AD === 1  ) {
+    
+    
+    const ld=  await redisClient.get(data[0].t);
+     if(JSON.parse(ld).AD==2){
+      await DroneTripData.insertMany(data);
+    }
+    
+      const lastData = data[data.length - 1];
+      await redisClient.set(lastData.t, JSON.stringify(lastData));
       // Insert into drone_data collection
       await DroneData.insertMany(data);
 
       // Switch to Redis DB 2 and store the last packet
-      await redisClient.select(1);
-      const lastData = data[data.length - 1];
-      await redisClient.set(lastData.t, JSON.stringify(lastData));
+      
 
       // Optionally, switch back to the default Redis DB after storing data in DB 2
       await redisClient.select(REDIS_DB);
       res.status(201).send({ 'response': 'Data saved successfully' });
 
     } else if (data[0].AD === 2) {
+
+      const ld=  await redisClient.get(data[0].t);
+     if(JSON.parse(ld).AD==1){
+      await DroneTripData.insertMany(data);
+    }
+    
            // Switch to Redis DB 2 and store the last packet
-           await redisClient.select(2);
+           await redisClient.select(1);
            const lastData = data[data.length - 1];
            await redisClient.set(lastData.t, JSON.stringify(lastData));
      
@@ -218,13 +228,9 @@ app.post('/parsedata', async (req, res) => {
            lastData.l=lastData?.l?.split(',')[lastData?.l?.split(',').length-1];
            lastData.g=lastData?.g?.split(',')[lastData?.g?.split(',').length-1];
            await redisClient.set(lastData.t, JSON.stringify(lastData));
-           console.log(lstData)
+           console.log(lastData);
 
-      // Insert into drone_trip_data collection
-      await DroneTripData.insertMany(data);
-      console.log("*************ALERT 2**************");
-      console.log(data);
-      console.log("**********************************");
+   
       res.status(201).send({ 'response': 'Data saved successfully to 2' });
     }
 
