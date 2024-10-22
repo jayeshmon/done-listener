@@ -8,7 +8,8 @@ const { createClient } = require('redis');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
-
+import { User } from './models/User.mjs';
+import { Drone } from './models/Drone.mjs';
 // Apply CORS middleware with options
 app.use(cors());
 
@@ -32,7 +33,7 @@ const sendEmail = async (subject, text, imei) => {
   try {
     // Find the drone by IMEI and populate the assignedUser field
     const drone = await Drone.findOne({ imei }).populate('assignedUser');
-
+console.log(drone);
     // If no drone is found or no user is assigned, handle the error
     if (!drone || !drone.assignedUser) {
       return console.error(`No drone found with IMEI ${imei} or no user assigned`);
@@ -40,7 +41,7 @@ const sendEmail = async (subject, text, imei) => {
 
     // Get the assigned user's email (you may need to add email field in User model if missing)
     const assignedUserEmail = drone.assignedUser.username; // Assuming username is the email
-
+console.log(assignedUserEmail);
     // Set up mail options
     const mailOptions = {
       from: process.env.EMAIL_USER,  // Sender's email address (your Gmail account)
@@ -257,7 +258,7 @@ app.post('/parsedata', async (req, res) => {
       res.status(201).send({ 'response': 'Data saved successfully' });
 
     } else if (data[0].AD === 2) {
-      sendEmail('Drone Activated', 'Drone Activated ' , data[0].t);
+      sendEmail('Drone DeActivated', 'Drone DeActivated ' , data[0].t);
       const ld=  await redisClient.get(data[0].t);
      if(JSON.parse(ld).AD==1){
       await DroneTripData.insertMany(data);
