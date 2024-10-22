@@ -47,13 +47,13 @@ const getTodayDate = () => {
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
   const day = String(today.getDate()).padStart(2, '0');
-  console.log(`${year}-${month}-${day}`);
+ // console.log(`${year}-${month}-${day}`);
   return `${year}-${month}-${day}`;
 };
 
 app.post('/register', async (req, res) => {
     const { username, password, role,mobile,companyName } = req.body;
-    console.log(username);
+   // console.log(username);
     if (!username || !password || !role) {
         return res.status(400).send({'message':'Username, password, and role are required'});
     }
@@ -162,7 +162,7 @@ app.post('/login', async (req, res) => {
 const auth = (roles = []) => {
     return (req, res, next) => {
         const token = req.header('x-auth-token');
-        console.log(token);
+        //console.log(token);
         if (!token) {
             return res.status(401).json({ 'message': 'No token, authorization denied' });
         }
@@ -223,9 +223,9 @@ app.get('/drones/:id', async (req, res) => {
 // Update a drone
 app.put('/drones/:id', async (req, res) => {
     const { imei, drone_name, model, status, range ,assignedUser} = req.body;
-console.log("*************************");
-    console.log(assignedUser);
-    console.log("*************************");
+//console.log("*************************");
+  //  console.log(assignedUser);
+    //console.log("*************************");
     try {
         const drone = await Drone.findById(req.params.id);
         if (!drone) {
@@ -323,11 +323,11 @@ app.post('/assign-drones/:username', async (req, res) => {
       // Iterate over the drones to fetch additional data from Redis
       for (const drone of drones) {
         // Fetch the latest data from Redis using the drone's IMEI as the key
-        console.log(drone.imei);
+        //console.log(drone.imei);
         let redisData = "";
         try {
           redisData = await redisClient.get(drone.imei);
-          console.log(redisData);
+          // console.log(redisData);
         } catch (err) {
           console.log(err.message);
         }
@@ -398,7 +398,7 @@ app.post('/assign-drones/:username', async (req, res) => {
 app.get('/dronedata/:imei', async (req, res) => {
   try {
     const { imei } = req.params;
-console.log(imei);
+//console.log(imei);
     // Find the drone by imei
     const drone = await Drone.findOne({ imei });
     if (!drone) {
@@ -429,7 +429,7 @@ app.get('/dronedatabydate/:t/:startTime/:endTime', async (req, res) => {
   try {
     const { t, startTime, endTime } = req.params;
 
-    console.log(t);
+    //console.log(t);
     // Query the database for drone data with the specified identifier and within the time range
     const droneData = await DroneData.find({
       't': t, 
@@ -458,7 +458,7 @@ app.get('/trip', async (req, res) => {
   try {
     // Helper function to get today's date in "YYYY-MM-DD" format
     const todayDate = getTodayDate();
-    console.log(todayDate);
+    //console.log(todayDate);
 
     // Fetch the total kilometers covered by all drones from MongoDB, filtered by today's date
     const totalKmData = await DroneTripData.aggregate([
@@ -648,7 +648,7 @@ app.get('/flying-hours', async (req, res) => {
 app.get('/flying-hours/user/:username', async (req, res) => {
   try {
     const { username } = req.params;
-
+console.log(username);
     // Find the user by their username
     const user = await User.findOne({ username });
 
@@ -661,7 +661,7 @@ app.get('/flying-hours/user/:username', async (req, res) => {
 
     // Get an array of all drone IMEIs
     const droneImeis = drones.map(drone => drone.imei);
-
+console.log(droneImeis);
     if (droneImeis.length === 0) {
       return res.json({ totalFlyingHours: 0 }); // No drones assigned
     }
