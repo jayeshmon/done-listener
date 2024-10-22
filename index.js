@@ -207,7 +207,7 @@ app.post('/parsedata', async (req, res) => {
 
     
     const ld=  await redisClient.get(data[0].t);
-     if(JSON.parse(ld).AD==2){
+     if(JSON.parse(ld)?.AD==2){
       await DroneTripData.insertMany(data);
     }
     
@@ -226,7 +226,7 @@ app.post('/parsedata', async (req, res) => {
     } else if (data[0].AD === 2) {
       //sendEmail('Drone DeActivated', 'Drone DeActivated ' , data[0].t);
       const ld=  await redisClient.get(data[0].t);
-     if(JSON.parse(ld).AD==1){
+     if(JSON.parse(ld)?.AD==1){
       await DroneTripData.insertMany(data);
     }
     
