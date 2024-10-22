@@ -681,7 +681,7 @@ console.log(droneImeis);
         $sort: { imei: 1, T: 1 } // Sort by imei and timestamp
       }
     ]);
-
+console.log(flights);
     let totalFlyingHours = 0;
 
     // Calculate flying hours for user's drones
