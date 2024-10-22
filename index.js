@@ -8,8 +8,7 @@ const { createClient } = require('redis');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
-import { User } from './models/User.mjs';
-import { Drone } from './models/Drone.mjs';
+
 // Apply CORS middleware with options
 app.use(cors());
 
@@ -28,40 +27,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Function to send email notification
-const sendEmail = async (subject, text, imei) => {
-  try {
-    // Find the drone by IMEI and populate the assignedUser field
-    const drone = await Drone.findOne({ imei }).populate('assignedUser');
-console.log(drone);
-    // If no drone is found or no user is assigned, handle the error
-    if (!drone || !drone.assignedUser) {
-      return console.error(`No drone found with IMEI ${imei} or no user assigned`);
-    }
 
-    // Get the assigned user's email (you may need to add email field in User model if missing)
-    const assignedUserEmail = drone.assignedUser.username; // Assuming username is the email
-console.log(assignedUserEmail);
-    // Set up mail options
-    const mailOptions = {
-      from: process.env.EMAIL_USER,  // Sender's email address (your Gmail account)
-      to: assignedUserEmail,         // Assigned user's email
-      subject: subject,              // Subject of the email
-      text: text                     // Email body
-    };
-
-    // Send the email
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        return console.error('Error sending email:', error);
-      }
-      console.log(`Email sent to ${assignedUserEmail}:`, info.response);
-    });
-
-  } catch (error) {
-    console.error('Error finding drone or sending email:', error);
-  }
-};
 
 
 // Connect to MongoDB
