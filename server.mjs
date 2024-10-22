@@ -646,7 +646,7 @@ app.get('/flying-hours', async (req, res) => {
 
 
 app.get('/flying-hours/user/:username', async (req, res) => {
-  try {
+  //try {
     const { username } = req.params;
 console.log(username);
     // Find the user by their username
@@ -707,10 +707,10 @@ console.log(flights);
     });
 
     res.json({ totalFlyingHours });
-  } catch (error) {
-    console.error('Error fetching flying hours for user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  //} catch (error) {
+    //console.error('Error fetching flying hours for user:', error);
+    //res.status(500).json({ message: 'Internal server error' });
+ // }
 });
 
 
