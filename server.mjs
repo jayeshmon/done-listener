@@ -661,7 +661,7 @@ console.log(username);
 
     // Get an array of all drone IMEIs
     const droneImeis = drones.map(drone => drone.imei);
-console.log(droneImeis);
+
     if (droneImeis.length === 0) {
       return res.json({ totalFlyingHours: 0 }); // No drones assigned
     }
@@ -674,7 +674,7 @@ console.log(droneImeis);
         '$match': {
           T: { '$regex': `^${todayDate}` }, // Match today's date
           AD: { '$in': [1, 2] }, // Match AD = 1 (start) and AD = 2 (end)
-          imei: { '$in': droneImeis } // Filter by user's drones
+          t: { '$in ': droneImeis } // Filter by user's drones
         }
       },
       {
