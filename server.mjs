@@ -740,7 +740,7 @@ app.get('/flying-hours/:imei', async (req, res) => {
         '$match': {
           T: { '$regex': `^${todayDate}` }, // Match today's date
           AD: { '$in': [1, 2] }, // Match AD = 1 (start) and AD = 2 (end)
-          imei: imei // Match the specific drone IMEI
+          t: {'$eq' :imei }// Match the specific drone IMEI
         }
       },
       {
