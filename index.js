@@ -229,7 +229,7 @@ app.post('/parsedata', async (req, res) => {
      if(JSON.parse(ld)?.AD==1){
       await DroneTripData.insertMany(data);
     }
-    
+    await DroneData.insertMany(data);
            // Switch to Redis DB 2 and store the last packet
            await redisClient.select(1);
            const lastData = data[data.length - 1];
