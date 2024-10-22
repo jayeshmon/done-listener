@@ -646,7 +646,7 @@ app.get('/flying-hours', async (req, res) => {
 
 
 app.get('/flying-hours/user/:username', async (req, res) => {
-  try {
+  //try {
     const { username } = req.params;
 console.log(username);
     // Find the user by their username
@@ -661,7 +661,7 @@ console.log(username);
 
     // Get an array of all drone IMEIs
     const droneImeis = drones.map(drone => drone.imei);
-
+console.log(droneImeis)
     if (droneImeis.length === 0) {
       return res.json({ totalFlyingHours: 0 }); // No drones assigned
     }
@@ -674,7 +674,7 @@ console.log(username);
         '$match': {
           T: { '$regex': `^${todayDate}` }, // Match today's date
           AD: { '$in': [1, 2] }, // Match AD = 1 (start) and AD = 2 (end)
-          t: { '$in ': droneImeis } // Filter by user's drones
+          t: { '$in': droneImeis } // Filter by user's drones
         }
       },
       {
@@ -707,10 +707,10 @@ console.log(flights);
     });
 
     res.json({ totalFlyingHours });
-  } catch (error) {
-    console.error('Error fetching flying hours for user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+ // } catch (error) {
+   // console.error('Error fetching flying hours for user:', error);
+   // res.status(500).json({ message: 'Internal server error' });
+  //}
 });
 
 
