@@ -237,7 +237,7 @@ app.post('/parsedata', async (req, res) => {
     console.log(data);
     // Insert data into the correct collection based on the 'AD' field
     if (data[0].AD === 1  ) {
-      sendEmail('Drone Activated', 'Drone Activated ',data[0].t);
+     // sendEmail('Drone Activated', 'Drone Activated ',data[0].t);
 
     
     const ld=  await redisClient.get(data[0].t);
@@ -258,7 +258,7 @@ app.post('/parsedata', async (req, res) => {
       res.status(201).send({ 'response': 'Data saved successfully' });
 
     } else if (data[0].AD === 2) {
-      sendEmail('Drone DeActivated', 'Drone DeActivated ' , data[0].t);
+      //sendEmail('Drone DeActivated', 'Drone DeActivated ' , data[0].t);
       const ld=  await redisClient.get(data[0].t);
      if(JSON.parse(ld).AD==1){
       await DroneTripData.insertMany(data);
