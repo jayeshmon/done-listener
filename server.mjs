@@ -515,7 +515,7 @@ app.get('/trip/user/:username', async (req, res) => {
         '$match': {
           T: { '$regex': `^${todayDate}` },
           AD:2,  // Match only today's date
-          imei: { '$in': droneImeis }  // Match only drones assigned to this user
+          t: { '$in': droneImeis }  // Match only drones assigned to this user
         }
       },
       {
@@ -556,7 +556,7 @@ app.get('/trip/:imei/km', async (req, res) => {
     const droneKmData = await DroneTripData.aggregate([
       {
         $match: {
-          imei: imei,
+          t: imei,
           AD:2,
           T: { '$regex': `^${todayDate}` } // Match only today's date
         }
