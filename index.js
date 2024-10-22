@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const Ajv = require('ajv');
 const cors = require('cors');
 const { createClient } = require('redis');
-
+const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
 
@@ -18,6 +18,50 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379;
 const REDIS_DB = process.env.REDIS_DB || 1;
 
 app.use(bodyParser.urlencoded({ extended: true }));
+// Set up nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER, // Use environment variable for email
+    pass: process.env.EMAIL_PASS, // Use environment variable for password
+  },
+});
+
+// Function to send email notification
+const sendEmail = async (subject, text, imei) => {
+  try {
+    // Find the drone by IMEI and populate the assignedUser field
+    const drone = await Drone.findOne({ imei }).populate('assignedUser');
+
+    // If no drone is found or no user is assigned, handle the error
+    if (!drone || !drone.assignedUser) {
+      return console.error(`No drone found with IMEI ${imei} or no user assigned`);
+    }
+
+    // Get the assigned user's email (you may need to add email field in User model if missing)
+    const assignedUserEmail = drone.assignedUser.username; // Assuming username is the email
+
+    // Set up mail options
+    const mailOptions = {
+      from: process.env.EMAIL_USER,  // Sender's email address (your Gmail account)
+      to: assignedUserEmail,         // Assigned user's email
+      subject: subject,              // Subject of the email
+      text: text                     // Email body
+    };
+
+    // Send the email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        return console.error('Error sending email:', error);
+      }
+      console.log(`Email sent to ${assignedUserEmail}:`, info.response);
+    });
+
+  } catch (error) {
+    console.error('Error finding drone or sending email:', error);
+  }
+};
+
 
 // Connect to MongoDB
 mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, authSource: 'admin' })
@@ -192,7 +236,8 @@ app.post('/parsedata', async (req, res) => {
     console.log(data);
     // Insert data into the correct collection based on the 'AD' field
     if (data[0].AD === 1  ) {
-    
+      sendEmail('Drone Activated', 'Drone Activated ',data[0].t);
+
     
     const ld=  await redisClient.get(data[0].t);
      if(JSON.parse(ld).AD==2){
@@ -212,7 +257,7 @@ app.post('/parsedata', async (req, res) => {
       res.status(201).send({ 'response': 'Data saved successfully' });
 
     } else if (data[0].AD === 2) {
-
+      sendEmail('Drone Activated', 'Drone Activated ' , data[0].t);
       const ld=  await redisClient.get(data[0].t);
      if(JSON.parse(ld).AD==1){
       await DroneTripData.insertMany(data);
