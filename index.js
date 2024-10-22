@@ -199,7 +199,7 @@ app.post('/parsedata', async (req, res) => {
     return res.status(400).send(errors);
   }
 
-  //try {
+  try {
     console.log(data);
     // Insert data into the correct collection based on the 'AD' field
     if (data[0].AD === 1  ) {
@@ -247,10 +247,10 @@ app.post('/parsedata', async (req, res) => {
     }
 
    
-  //} catch (err) {
-    //console.error('Error saving data:', err); // Log the error
-    //res.status(500).send('Error saving data');
-  //}
+  } catch (err) {
+    console.error('Error saving data:', err); // Log the error
+    res.status(500).send('Error saving data');
+  }
 });
 
 app.listen(PORT, () => {
